@@ -1,0 +1,22 @@
+# config.py — copy to config.py and fill in your values.
+#
+# This file is committed as a template. Your real config.py is
+# gitignored so credentials never end up in the repo.
+
+# Your home WiFi. The Pico W and Pico 2 W only support 2.4 GHz.
+WIFI_SSID = "your-wifi-ssid"
+WIFI_PASSWORD = "your-wifi-password"
+
+# IP of your real Shelly 3EM Gen3 (or any Shelly with /rpc/EM.GetStatus).
+# Give it a static lease in your router so it doesn't move.
+SHELLY_IP = "192.168.x.x"
+
+# The src/id we present to the Marstek B2500. Anything starting with
+# "shellypro3em-" passes its whitelist filter. The suffix can be any
+# 12-hex-character string; keeping the real Shelly's MAC is convenient
+# but not required.
+FAKE_SRC = "shellypro3em-aabbccddeeff"
+
+# UDP ports the bridge listens on. The B2500 may use 1010 (older
+# firmware) or 2220 (newer). Listening on both covers everything.
+LISTEN_PORTS = (1010, 2220)

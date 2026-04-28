@@ -1,0 +1,17 @@
+# Local Pico config (contains WiFi credentials — never commit)
+src/config.py
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
