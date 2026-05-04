@@ -20,3 +20,9 @@ FAKE_SRC = "shellypro3em-aabbccddeeff"
 # UDP ports the bridge listens on. The B2500 may use 1010 (older
 # firmware) or 2220 (newer). Listening on both covers everything.
 LISTEN_PORTS = (1010, 2220)
+
+# Optional: report Pico liveness to a Supabase REST endpoint every 5 min.
+# Leave both empty to disable (bridge stays fully standalone).
+# Set both to enable a "pico_bridge" row in the system_heartbeat table.
+SUPABASE_HEARTBEAT_URL = ""   # e.g. "https://xxx.supabase.co/rest/v1/system_heartbeat"
+SUPABASE_KEY = ""             # service_role key — has DB write access, treat as secret

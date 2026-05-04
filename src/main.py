@@ -22,6 +22,7 @@ import socket
 import time
 
 import network
+import ntptime
 import urequests
 from machine import WDT, reset
 
@@ -33,10 +34,12 @@ WIFI_TIMEOUT_S = 30
 WDT_TIMEOUT_MS = 8000
 GC_INTERVAL_MS = 30_000
 HEARTBEAT_INTERVAL_MS = 60_000
+SUPABASE_HB_INTERVAL_MS = 5 * 60 * 1000  # 5 min
 STARTUP_GRACE_S = 3
 REBOOT_DELAY_S = 5
 
 _cache = {"powers": None, "ts": 0}
+_time_synced = False
 
 
 def connect_wifi():
@@ -58,6 +61,57 @@ def connect_wifi():
         config.WIFI_SSID, ip, wlan.status("rssi")
     ))
     return wlan
+
+
+def sync_time():
+    # NTP sync. Required before sending heartbeats with valid timestamps.
+    # If sync fails, heartbeat is silently skipped — bridge keeps running.
+    global _time_synced
+    try:
+        ntptime.host = "pool.ntp.org"
+        ntptime.settime()
+        _time_synced = True
+        print("NTP synced")
+    except Exception as e:
+        print("NTP sync failed:", e)
+
+
+def _iso_now():
+    t = time.gmtime()
+    return "{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}Z".format(
+        t[0], t[1], t[2], t[3], t[4], t[5]
+    )
+
+
+def supabase_heartbeat(pkt_count, err_count):
+    # Optional: report liveness to a Supabase REST endpoint so a remote
+    # dashboard can show this Pico as online. No-op if config fields are
+    # not set, keeping the bridge standalone-usable.
+    url = getattr(config, "SUPABASE_HEARTBEAT_URL", "")
+    key = getattr(config, "SUPABASE_KEY", "")
+    if not url or not key or not _time_synced:
+        return
+    try:
+        body = json.dumps([{
+            "component": "pico_bridge",
+            "last_seen": _iso_now(),
+            "details": {"pkts": pkt_count, "errs": err_count},
+        }])
+        headers = {
+            "apikey": key,
+            "Authorization": "Bearer " + key,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates",
+        }
+        r = urequests.post(
+            url + "?on_conflict=component",
+            data=body,
+            headers=headers,
+            timeout=4,
+        )
+        r.close()
+    except Exception as e:
+        print("supabase hb failed:", e)
 
 
 def fetch_shelly_powers():
@@ -134,6 +188,7 @@ def serve():
     wdt = WDT(timeout=WDT_TIMEOUT_MS)
     last_gc = time.ticks_ms()
     last_heartbeat = time.ticks_ms()
+    last_supabase_hb = time.ticks_ms()
     pkt_count = 0
     err_count = 0
 
@@ -158,6 +213,12 @@ def serve():
             print("[hb] pkts={} errs={}".format(pkt_count, err_count))
             last_heartbeat = now
 
+        if time.ticks_diff(now, last_supabase_hb) > SUPABASE_HB_INTERVAL_MS:
+            wdt.feed()
+            supabase_heartbeat(pkt_count, err_count)
+            wdt.feed()
+            last_supabase_hb = now
+
         if time.ticks_diff(now, last_gc) > GC_INTERVAL_MS:
             gc.collect()
             last_gc = now
@@ -175,6 +236,8 @@ def main():
         print("WiFi failed — rebooting in {}s".format(REBOOT_DELAY_S))
         time.sleep(REBOOT_DELAY_S)
         reset()
+
+    sync_time()
 
     try:
         p = fetch_shelly_powers()

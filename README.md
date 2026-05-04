@@ -63,12 +63,23 @@ Tested with:
 If you confirm it works on a different combo, please open an issue or
 PR — happy to grow the compatibility table.
 
+## Optional: monitoring dashboard
+
+The bridge can also report a heartbeat to Supabase every 5 minutes so a
+companion dashboard knows it's alive — see
+[bjolo-de/b2500-dashboard](https://github.com/bjolo-de/b2500-dashboard).
+Two extra fields in `config.py` (both default empty = disabled), no
+change to the bridge's primary function.
+
 ## Related projects
 
-- [tomquist/b2500-meter](https://github.com/tomquist/b2500-meter) — the
+- [tomquist/AstraMeter](https://github.com/tomquist/AstraMeter) — the
   full‑featured Python emulator that supports many smart meter sources
   and runs on Linux/Docker/Home Assistant. This bridge is the
   minimal‑hardware counterpart, focused on a single use case.
+- [tomquist/hm2mqtt](https://github.com/tomquist/hm2mqtt) and
+  [tomquist/hame-relay](https://github.com/tomquist/hame-relay) — the
+  upstream MQTT integrations the dashboard builds on top of.
 
 ## License
 
