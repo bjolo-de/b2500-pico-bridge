@@ -89,8 +89,15 @@ def supabase_heartbeat(pkt_count, err_count):
     # not set, keeping the bridge standalone-usable.
     url = getattr(config, "SUPABASE_HEARTBEAT_URL", "")
     key = getattr(config, "SUPABASE_KEY", "")
-    if not url or not key or not _time_synced:
+    if not url or not key:
         return
+    # If NTP failed at boot (server unreachable at that moment), retry now
+    # lazily before each heartbeat. Without this, a Pico that boots before
+    # the WiFi/NTP path is ready stays silently silent until next reboot.
+    if not _time_synced:
+        sync_time()
+        if not _time_synced:
+            return
     try:
         body = json.dumps([{
             "component": "pico_bridge",
