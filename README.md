@@ -55,8 +55,9 @@ not) — see [docs/setup.md](docs/setup.md) for details.
 
 ## Status
 
-Tested with:
-- Marstek B2500 firmware **V110.9 (HMJ)**
+Confirmed working with:
+- Marstek B2500 firmware **V110.9 (HMJ)** — original target hardware
+- Marstek **Venus A** — confirmed by [@werner-thomas](https://github.com/werner-thomas) in [#1](https://github.com/bjolo-de/b2500-pico-bridge/issues/1)
 - Shelly 3EM Gen3, model `S3EM-003CXCEU63`, firmware `1.7.5`
 - Raspberry Pi Pico 2 W, MicroPython 1.x
 
